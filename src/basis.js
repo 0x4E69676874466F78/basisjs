@@ -37,7 +37,7 @@
 ;(function createBasisInstance(context, __basisFilename, __config){
   'use strict';
 
-  var VERSION = '1.10.3';
+  var VERSION = '1.11.1';
 
   var global = Function('return this')();
   var process = global.process;
@@ -481,7 +481,7 @@
   var nullGetter = (function(){
     var nullGetter = function(){};
     nullGetter[getter.ID] = getter.ID + 'nullGetter';
-    nullGetter.__extend__ = getter,
+    nullGetter.__extend__ = getter;
     nullGetter.as = function(){
       return nullGetter;
     };
@@ -2164,11 +2164,19 @@
       else
       {
         try {
-          resourceContent = typeof process.basisjsReadFile == 'function'
-            ? process.basisjsReadFile(url)
-            : require('fs').readFileSync(url, 'utf-8');
+          if (typeof process.basisjsReadFile == 'function')
+            resourceContent = process.basisjsReadFile(url);
+          else
+          {
+            // There is a trick to avoid warnings (bacause of using a `require`)
+            // when using basis.js with webpack or similar tools with static analisys
+            /** @cut */ if (true)
+            /** @cut */   resourceContent = require('fs').readFileSync(url, 'utf-8');
+            /** @cut */ else
+            throw new Error('fs not supported for packed basis.js');
+          }
         } catch(e){
-          /** @cut */ consoleMethods.error('basis.resource: Unable to load ' + url, e);
+          consoleMethods.error('basis.resource: Unable to load ' + url, e);
         }
       }
 
